@@ -14,7 +14,7 @@ fix sync client
 
 add request confirmation and timeout
 
-add a check if dns.db exists if not create
+add a check if dns.db exists if not create* - done
 
 error checking for bad symbols in any of following: domain, ip, timestamp and change counter
 
