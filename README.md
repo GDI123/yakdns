@@ -23,3 +23,5 @@ away for the host machine to use the dns.db, either through dumping it to /etc/h
 and of course a client for making these requests
 
 create a manual for how to interact with the ddns server for developers
+
+figure weather to use sqlite or json to create the database
