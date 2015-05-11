@@ -1,3 +1,4 @@
+#cjdnsbot
 import socket
 import sys
 import time
@@ -9,6 +10,12 @@ sys.path.append('')
 
 peerstats_result = []
 
+filescheck_dnsdb = os.path.exists("dns.db") #file check here
+if filescheck_dnsdb != True:
+	print "dns.db not found - creating now"
+	with open("dns.db",'w'):
+		pass
+
 with open("dns.db",'r') as dns_list:
 	pre_ip_dns_list = dns_list.readlines()
 ip_dns_list = {}
@@ -18,29 +25,33 @@ for x in pre_ip_dns_list:
 	if len(temp) != 0:
 		ip_dns_list[temp[0].strip()] = [temp[1].strip(),temp[2].strip(),temp[3].strip()]
 
-def check_db_current(address):#this monster basicly searches and asks if anyone would like to sync with it, and it checks if everything is right with a couple of mega simple algorithms
+def check_db_current():#this monster basicly searches and asks if anyone would like to sync with it, and it checks if everything is right with a couple of mega simple algorithms
 	recieved_dns_list = []
-	from_this_timestamp = get_newest_timestamp(ip_dns_list)
-	print "last entry" + str(from_this_timestamp) 
+
 	client = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
-	client.bind((address, 8788))
+	client.bind(("::", 8788))
 	client.listen(1)
+	conn, addr = s.accept()
+
 	#client.settimeout(5)
 	send_sync_request(peerstats_result,"00")
 
-	ready = client.recv(1024)
-	print ready
-	if ready.strip() == "00ok":
-		client.send(from_this_timestamp)
-		wait = client.recv(1024)
+	incoming_data = conn.recv(1024)
+
+	print incoming_data
+	if incoming_data.strip() == "00ok":
+		from_this_timestamp = get_newest_timestamp(ip_dns_list)
+		print "last entry" + str(from_this_timestamp) 
+		conn.send(from_this_timestamp)
+		wait = conn.recv(1024)
 		if wait != "00utd":
 			i = 0
 			while i == 0:
-				recieved_data = client.recv(1024)
+				recieved_data = conn.recv(1024)
 				if recieved_data != "00done":
 					recieved_dns_list.append(recieved_data)
 				else:
-					client.close
+					client.close()
 					i = 1
 
 			final_list = {}
