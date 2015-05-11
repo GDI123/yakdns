@@ -1,6 +1,7 @@
 import socket
 import sys
 import time
+import os
 sys.path.append("contrib/python/")
 import cjdnsadmin.adminTools as at
 sys.path.append("contrib/python/cjdnsadmin")
@@ -26,14 +27,18 @@ for x in pre_ip_dns_list:
 
 def check_db_current():#this monster basicly searches and asks if anyone would like to sync with it, and it checks if everything is right with a couple of mega simple algorithms
 	recieved_dns_list = []
-
+	get_peerstats()
+	print "setting up temp server for sync"
 	client = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
 	client.bind(("::", 8788))
 	client.listen(1)
-	conn, addr = s.accept()
-
-	#client.settimeout(5)
+	print "temp server setup"
+	print "looking for servers to sync with"
 	send_sync_request(peerstats_result,"00")
+	conn, addr = client.accept()
+	print "connection accepted"
+	#client.settimeout(5)
+	
 
 	incoming_data = conn.recv(1024)
 
@@ -51,18 +56,21 @@ def check_db_current():#this monster basicly searches and asks if anyone would l
 					recieved_dns_list.append(recieved_data)
 				else:
 					client.close()
+					print "finished getting latest data"
 					i = 1
-
+			print "about to compare lists for udpates"
 			final_list = {}
 			for x in recieved_dns_list:
 				temp = x.split()
 				final_list[temp[0].strip()] = [temp[1].strip(),temp[2].strip(),temp[3]]
 
 			new = sync_db_check(ip_dns_list,final_list)
-
+			print "sync completed now writing to database"
 			with open("dns.db",'w') as update:
 				for x in new:
-					update.write(x + new[x][0] + new[x][1] + new[x][2] + "\n")
+					update.write(x + " " + new[x][0] + " " + new[x][1] + " " + new[x][2] + "\n")
+
+			print "all done starting up ddns"
 		else:
 			print "nothing to update"
 
@@ -77,7 +85,7 @@ def get_newest_entrys(current_dict,timestamp_request):#this is used to grab only
 	newest = []
 	for x in current_dict:
 		if current_dict[x][1] > timestamp_request:
-			newest.append(current_dict[x] + current_dict[x][0] + current_dict[x][1] + current_dict[x][2])
+			newest.append(str(x) + " " + str(current_dict[x][0]) + " " + str(current_dict[x][1]) + " " + str(current_dict[x][2]))
 	return newest
 
 def sync_db_check(old,new):#compares local dns list and requested new one and updates entrys to match
@@ -94,7 +102,7 @@ def get_peerstats():#find out who were connected to so we can find dns servers
 	global peerstats_result
 	for x in peerstats_raw:
 		peerstats_result.append(PublicToIp6_convert(x['publicKey']))
-	print len(peerstats_result)
+	print "peerstats" + str(len(peerstats_result))
 
 def send_sync_request(servers,data_to_send):
 	i = 0
@@ -122,7 +130,8 @@ def new_db_request(address): #request to syncronise with another dns server
 	to_be_synced = get_newest_entrys(ip_dns_list,timestamp_to_check_from)
 	if len(to_be_synced) != 0:
 		for x in to_be_synced:
-			client.send(to_be_synced[x].strip() + to_be_synced[x][0].strip() + to_be_synced[x][1].strip() + to_be_synced[x][2].strip())
+			temp = x.split()
+			client.send(str(temp[0].strip()) + " " + str(temp[1].strip()) + " " + str(temp[2].strip()) + " " + str(temp[3].strip()))
 	else:
 	 	client.sendto("00utd")
 	client.send("00done")
@@ -170,7 +179,7 @@ def release_dom(data): #simply removes an entry in the dns.dn
 	else:
 		udoser.sendto("Does not exist",addr)
 get_peerstats()
-check_db_current("::")
+check_db_current()
 server = "::" #ipv6 localaddr
 #this section is the server its self
 udoser = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
