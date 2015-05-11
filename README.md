@@ -17,4 +17,8 @@ add a check if dns.db exists if not create
 
 error checking for bad symbols in any of following: domain, ip, timestamp and change counter
 
-away for the host machine to use the dns.db, either through dumping it to /etc/hosts or creating something that the system query for dns.
+away for the host machine to use the dns.db, either through dumping it to /etc/hosts or creating something that the system can query for dns.
+
+and of course a client for making these requests
+
+create a manual for how to interact with the ddns server for developers
