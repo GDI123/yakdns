@@ -1,5 +1,6 @@
 # ddns
 a very basic attempt at decentralised dns for cjdns
+
 Ddns piggy backs Cjdns's dht routing to find servers to share dns data with, this way we dont have to create our own dht program. 
 
 THIS IS NOT FOR USE AT THE MOMENT, STILL IN A BROKEN STATE.
