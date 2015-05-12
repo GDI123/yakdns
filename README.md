@@ -17,7 +17,7 @@ add request confirmation and timeout
 add a check if dns.db exists if not create* - done
 
 error checking for bad symbols in any of following: domain, ip, timestamp and change counter - 
-simple function to check for non alphanumeric symbols and report back with a boolean responce
+simple function to check for non alphanumeric symbols and report back with a boolean responce* - done
 
 away for the host machine to use the dns.db, either through dumping it to /etc/hosts or creating something that the system can query for dns.
 
