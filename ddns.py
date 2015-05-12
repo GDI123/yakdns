@@ -38,7 +38,6 @@ def check_db_current():#this monster basicly searches and asks if anyone would l
 	conn, addr = client.accept()
 	print "connection accepted"
 	#client.settimeout(5)
-	
 
 	incoming_data = conn.recv(1024)
 
@@ -48,10 +47,12 @@ def check_db_current():#this monster basicly searches and asks if anyone would l
 		print "last entry" + str(from_this_timestamp) 
 		conn.send(from_this_timestamp)
 		wait = conn.recv(1024)
+		print "wait: " + str(wait)
 		if wait != "00utd":
 			i = 0
 			while i == 0:
 				recieved_data = conn.recv(1024)
+				print str(recieved_data)
 				if recieved_data != "00done":
 					recieved_dns_list.append(recieved_data)
 				else:
@@ -122,18 +123,36 @@ def send_to_peers(server_list,data_to_send):#relay request to any available serv
 			client.send(data_to_send)
 		print data_to_send
 
+def check_for_bad_symbols(request):
+	temp = request.split()
+	bool_list = []
+	bool_list.append(temp[1].replace(".","").replace("-","").isalnum())
+	bool_list.append(temp[2].replace(":","").isalnum())
+	bool_list.append(temp[3].replace(".","").isdigit())
+	bool_list.append(temp[4].isdigit())
+
+	if False in bool_list:
+		return False
+	else:
+		return True
+
 def new_db_request(address): #request to syncronise with another dns server
 	client = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
 	client.connect((address, 8788))
 	client.send("00ok")
 	timestamp_to_check_from = client.recv(1024)
+	print "recieve timestamp: " + str(timestamp_to_check_from)
 	to_be_synced = get_newest_entrys(ip_dns_list,timestamp_to_check_from)
+	print "list to be synced: " + str(to_be_synced)
 	if len(to_be_synced) != 0:
+		print "sending data for syncing"
 		for x in to_be_synced:
 			temp = x.split()
 			client.send(str(temp[0].strip()) + " " + str(temp[1].strip()) + " " + str(temp[2].strip()) + " " + str(temp[3].strip()))
+		print "done sending data"
 	else:
 	 	client.sendto("00utd")
+	 	print "nothing to sync"
 	client.send("00done")
 	client.close()
 
