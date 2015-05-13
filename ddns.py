@@ -85,7 +85,9 @@ def get_newest_entrys(current_dict,timestamp_request):#this is used to grab only
 def sync_db_check(old,new):#compares local dns list and requested new one and updates entrys to match
 	for x in new:
 		print "new " + str(x)
-		if old[x][1] != new[x][1]: #this if statement checks and compares to see if timestamps are the same or not
+		if x not in str(old):
+			old[x] = new[x]
+		elif old[x][1] != new[x][1]: #this if statement checks and compares to see if timestamps are the same or not
 			if old[x][2] < new[x][2]: #this if statement checks to see if times update is greater than in the original dictonary if so it will update the old dictonary to match
 				old[x] = new[x] #update old dict
 	print "old " + str(old)
