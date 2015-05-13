@@ -10,7 +10,11 @@ Todo list:
 
 threading & queueing for incoming requests
 
-fix sync client
+fix sync client* done
+
+  need to add timeout to sync
+  add option to do a manual sync after startup
+  new_db_request needs to exit correctly
 
 add request confirmation and timeout
 
