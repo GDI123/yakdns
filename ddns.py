@@ -28,52 +28,45 @@ for x in pre_ip_dns_list:
 def check_db_current():#this monster basicly searches and asks if anyone would like to sync with it, and it checks if everything is right with a couple of mega simple algorithms
 	recieved_dns_list = []
 	get_peerstats()
-	print "setting up temp server for sync"
-	client = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
-	client.bind(("::", 8788))
-	client.listen(1)
-	print "temp server setup"
-	print "looking for servers to sync with"
+	#start temp server
+	s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+	s.bind(('::', 8878))
+	s.listen(1)
+	#request sync
 	send_sync_request(peerstats_result,"00")
-	conn, addr = client.accept()
-	print "connection accepted"
-	#client.settimeout(5)
+	#wait and accept a connection
+	conn, addr = s.accept()
+	bob = conn.recv(1024)
+	print bob
+	if bob.strip() == "ready":
+		i = 0
+		t_stamp = get_newest_timestamp(ip_dns_list)
+		conn.send(t_stamp)
+		while i != 1:
+			r_Data = conn.recv(2048)
+			if r_Data.strip() != "done":
+				recieved_dns_list.append(r_Data)
+				conn.send("go")
+			else:
+				i = 1
 
-	incoming_data = conn.recv(1024)
+		s.close()
+		
+		final_list = {}
+		for x in recieved_dns_list:
+			temp = x.split()
+			final_list[temp[0].strip()] = [temp[1].strip(),temp[2].strip(),temp[3]]
 
-	print incoming_data
-	if incoming_data.strip() == "00ok":
-		from_this_timestamp = get_newest_timestamp(ip_dns_list)
-		print "last entry" + str(from_this_timestamp) 
-		conn.send(from_this_timestamp)
-		wait = conn.recv(1024)
-		print "wait: " + str(wait)
-		if wait != "00utd":
-			i = 0
-			while i == 0:
-				recieved_data = conn.recv(1024)
-				print str(recieved_data)
-				if recieved_data != "00done":
-					recieved_dns_list.append(recieved_data)
-				else:
-					client.close()
-					print "finished getting latest data"
-					i = 1
-			print "about to compare lists for udpates"
-			final_list = {}
-			for x in recieved_dns_list:
-				temp = x.split()
-				final_list[temp[0].strip()] = [temp[1].strip(),temp[2].strip(),temp[3]]
+		print "final list: " + str(final_list)
+		new = sync_db_check(ip_dns_list,final_list)
+		print "sync completed now writing to database"
+		with open("dns.db",'w') as update:
+			for x in new:
+				update.write(x + " " + new[x][0] + " " + new[x][1] + " " + new[x][2] + "\n")
 
-			new = sync_db_check(ip_dns_list,final_list)
-			print "sync completed now writing to database"
-			with open("dns.db",'w') as update:
-				for x in new:
-					update.write(x + " " + new[x][0] + " " + new[x][1] + " " + new[x][2] + "\n")
-
-			print "all done starting up ddns"
-		else:
-			print "nothing to update"
+		print "all done starting up ddns"
+	else:
+		print "nothing to update"
 
 def get_newest_timestamp(old):#search current dns list for the newest entry
 	newest_timestamp = []
@@ -91,9 +84,11 @@ def get_newest_entrys(current_dict,timestamp_request):#this is used to grab only
 
 def sync_db_check(old,new):#compares local dns list and requested new one and updates entrys to match
 	for x in new:
+		print "new " + str(x)
 		if old[x][1] != new[x][1]: #this if statement checks and compares to see if timestamps are the same or not
 			if old[x][2] < new[x][2]: #this if statement checks to see if times update is greater than in the original dictonary if so it will update the old dictonary to match
 				old[x] = new[x] #update old dict
+	print "old " + str(old)
 	return old
 
 def get_peerstats():#find out who were connected to so we can find dns servers
@@ -138,8 +133,8 @@ def check_for_bad_symbols(request):
 
 def new_db_request(address): #request to syncronise with another dns server
 	client = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
-	client.connect((address, 8788))
-	client.send("00ok")
+	client.connect((address, 8878))
+	client.send("ready")
 	timestamp_to_check_from = client.recv(1024)
 	print "recieve timestamp: " + str(timestamp_to_check_from)
 	to_be_synced = get_newest_entrys(ip_dns_list,timestamp_to_check_from)
@@ -149,11 +144,12 @@ def new_db_request(address): #request to syncronise with another dns server
 		for x in to_be_synced:
 			temp = x.split()
 			client.send(str(temp[0].strip()) + " " + str(temp[1].strip()) + " " + str(temp[2].strip()) + " " + str(temp[3].strip()))
-		print "done sending data"
+			go = client.recv(1024)
+		client.send("done")
 	else:
-	 	client.sendto("00utd")
+	 	client.send("done")
 	 	print "nothing to sync"
-	client.send("00done")
+	print "finished"
 	client.close()
 
 def new_dom(data):# adds a new entry in dns.db
@@ -212,9 +208,13 @@ while i == 0:
 		break
 	print "incoming request: " + request + " - from: " + str(addr[0])
 	#this section deals with all the requests that come in, including requests to syncronise databases
+	udoser.sendto("ok",addr)
 	s_request = request.split()
 	if 01 == int(s_request[0]):
-		new_dom(request)
+		if check_for_bad_symbols(request) != False:
+			new_dom(request)
+		else:
+			udoser.sendto("Bad Symbols in Request",addr)
 	if 02 == int(s_request[0]):
 		release_dom(request)
 	if 00 == int(s_request[0]):
