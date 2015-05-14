@@ -116,12 +116,15 @@ def send_sync_request(servers,data_to_send):
 		print "attempt" + str(i)
 
 def send_to_peers(server_list,data_to_send):#relay request to any available servers using peerstat data and once request has been processed
+	#consider butchering the "findnode" code in cjdns to fall back on to find more dns servers
 	for x in server_list:
 		print x
 		if x != addr[0]:
 			client = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
-			client.connect((x.strip(), 8787))
-			client.send(data_to_send)
+			#consider sending 3 times if no responce move on to next node
+			#client.settimeout(1)
+			client.sendto(data_to_send, (x.strip(), 8787))
+			#add in wait and comfirm send, and settimeout as well if nothing recieved
 		print data_to_send
 
 def check_for_bad_symbols(request):
