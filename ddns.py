@@ -30,16 +30,19 @@ def check_db_current():#this monster basicly searches and asks if anyone would l
 	get_peerstats()
 	#start temp server
 	s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+	s.settimeout(10)
 	s.bind(('::', 8878))
 	s.listen(1)
 	#request sync
 	send_sync_request(peerstats_result,"00")
 	#wait and accept a connection
 	conn, addr = s.accept()
+	s.settimeout(None)
 	bob = conn.recv(1024)
 	print bob
 	if bob.strip() == "ready":
 		i = 0
+		#have to add an if db empty send all your database
 		t_stamp = get_newest_timestamp(ip_dns_list)
 		conn.send(t_stamp)
 		while i != 1:
@@ -51,7 +54,8 @@ def check_db_current():#this monster basicly searches and asks if anyone would l
 				i = 1
 
 		s.close()
-		
+		#consider splitting this up and have the above option more generic and below
+		#a function on its own
 		final_list = {}
 		for x in recieved_dns_list:
 			temp = x.split()
