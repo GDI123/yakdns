@@ -36,8 +36,6 @@ fix sync client* done
 
   add option to do a manual sync after startup
   
-  new_db_request needs to exit correctly
-
 add request confirmation and timeout
 
 away for the host machine to use the dns.db, either through dumping it to /etc/hosts or creating something that the system can query for dns.
