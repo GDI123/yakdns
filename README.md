@@ -5,6 +5,17 @@ Ddns piggy backs Cjdns's dht routing to find servers to share dns data with, thi
 
 DDNS is ready for testing, This is PRE-ALPHA, so lots of broken shit
 
+# Install ddns
+
+simply drop ddns.py into /cjdns-master thats it and run as root just like cjdns
+
+client:
+
+client can be run as normal user from anywhere
+
+Add new domain: python ddns-client.py new domain.name ipv6-addr
+Rlease a domain: python ddns-client.py release domain.name
+
 # How it works
 
 Domains are stored in dns.db as follows:
