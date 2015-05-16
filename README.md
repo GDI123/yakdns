@@ -10,7 +10,7 @@ Todo list:
 
 threading & queueing for incoming requests
 
-possibly treat ddns like cjdns in that you have to accept or add other nodes in the trust format/ this would simplifie a few things and, maybe have ddns search your config file and grab the public key and convert it to the ipv6 and use that so the use doesnt have to configure it them self??????
+possibly treat ddns like cjdns in that you have to accept or add other nodes in the trust format/ this would simplifie a few things and, maybe have ddns search your config file and grab the public key and convert it to the ipv6 and use that so the user doesnt have to configure it them self??????
 
 fix sync client* done
 
