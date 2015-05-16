@@ -13,15 +13,17 @@ Domains are stored in dns.db as follows:
 
 "io.nerd fc38:410e:bce7:a7e2:d4f0:a805:b509:be11 1431803121.12 0"
 
-request format should be as follows:
+request format should be as follows, and over udp:
 
 01 = add new domain
 
-01 io.nerd fc38:410e:bce7:a7e2:d4f0:a805:b509:be11
+01 io.nerd fc38:410e:bce7:a7e2:d4f0:a805:b509:be11 1431803121.12 0
 
 02 = release domain
 
-02 io.nerd
+02 io.nerd (the server will deal with releasing the domain)
+
+00 = is a sync request, this is only done by the servers when they start up not the client
 
 Todo list:
 ==========
