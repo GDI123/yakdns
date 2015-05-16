@@ -27,7 +27,7 @@ request format should be as follows, and over udp:
 
 # contact
 
-you can find me on yakamo.org #ddns
+you can find me on irc at  yakamo.org #ddns
 
 Todo list:
 ==========
