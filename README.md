@@ -25,6 +25,10 @@ request format should be as follows, and over udp:
 
 00 = is a sync request, this is only done by the servers when they start up not the client
 
+# contact
+
+you can find me on yakamo.org #ddns
+
 Todo list:
 ==========
 
