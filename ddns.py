@@ -29,48 +29,52 @@ def check_db_current():#this monster basicly searches and asks if anyone would l
 	recieved_dns_list = []
 	get_peerstats()
 	#start temp server
-	s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
-	s.settimeout(10)
-	s.bind(('::', 8878))
-	s.listen(1)
-	#request sync
-	send_sync_request(peerstats_result,"00")
-	#wait and accept a connection
-	conn, addr = s.accept()
-	s.settimeout(None)
-	bob = conn.recv(1024)
-	print bob
-	if bob.strip() == "ready":
-		i = 0
-		#have to add an if db empty send all your database
-		t_stamp = get_newest_timestamp(ip_dns_list)
-		conn.send(t_stamp)
-		while i != 1:
-			r_Data = conn.recv(2048)
-			if r_Data.strip() != "done":
-				recieved_dns_list.append(r_Data)
-				conn.send("go")
-			else:
-				i = 1
+	try:
+		s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+		s.settimeout(10)
+		s.bind(('::', 8878))
+		s.listen(1)
+		#request sync
+		send_sync_request(peerstats_result,"00")
+		#wait and accept a connection
+		conn, addr = s.accept()
+		s.settimeout(None)
+		bob = conn.recv(1024)
+		print bob
+		if bob.strip() == "ready":
+			i = 0
+			#have to add an if db empty send all your database
+			t_stamp = get_newest_timestamp(ip_dns_list)
+			conn.send(t_stamp)
+			while i != 1:
+				r_Data = conn.recv(2048)
+				if r_Data.strip() != "done":
+					recieved_dns_list.append(r_Data)
+					conn.send("go")
+				else:
+					i = 1
 
-		s.close()
+				s.close()
+
 		#consider splitting this up and have the above option more generic and below
 		#a function on its own
-		final_list = {}
-		for x in recieved_dns_list:
-			temp = x.split()
-			final_list[temp[0].strip()] = [temp[1].strip(),temp[2].strip(),temp[3]]
+			final_list = {}
+			for x in recieved_dns_list:
+				temp = x.split()
+				final_list[temp[0].strip()] = [temp[1].strip(),temp[2].strip(),temp[3]]
 
-		print "final list: " + str(final_list)
-		new = sync_db_check(ip_dns_list,final_list)
-		print "sync completed now writing to database"
-		with open("dns.db",'w') as update:
-			for x in new:
-				update.write(x + " " + new[x][0] + " " + new[x][1] + " " + new[x][2] + "\n")
+			print "final list: " + str(final_list)
+			new = sync_db_check(ip_dns_list,final_list)
+			print "sync completed now writing to database"
+			with open("dns.db",'w') as update:
+				for x in new:
+					update.write(x + " " + new[x][0] + " " + new[x][1] + " " + new[x][2] + "\n")
 
-		print "all done starting up ddns"
-	else:
-		print "nothing to update"
+			print "all done starting up ddns"
+		else:
+			print "nothing to update"
+	except:
+		print "no other dns servers found, continuing to start ddns"
 
 def get_newest_timestamp(old):#search current dns list for the newest entry
 	newest_timestamp = []
@@ -108,13 +112,15 @@ def get_peerstats():#find out who were connected to so we can find dns servers
 
 def send_sync_request(servers,data_to_send):
 	i = 0
-	for x in servers:
-		client = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
-		client.connect((x.strip(), 8787))
-		client.send(data_to_send)
-		i = i + 1
-		print "attempt" + str(i)
-
+	b = 0
+	while b != 2:
+		for x in servers:
+			client = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+			client.connect((x.strip(), 8787))
+			client.send(data_to_send)
+			i = i + 1
+			print "attempt" + str(i)
+		b = b + 1
 def send_to_peers(server_list,data_to_send):#relay request to any available servers using peerstat data and once request has been processed
 	#consider butchering the "findnode" code in cjdns to fall back on to find more dns servers
 	for x in server_list:
@@ -123,9 +129,11 @@ def send_to_peers(server_list,data_to_send):#relay request to any available serv
 			client = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
 			#consider sending 3 times if no responce move on to next node
 			#client.settimeout(1)
-			client.sendto(data_to_send, (x.strip(), 8787))
+			b = 0
+			while b != 2:
+				client.sendto(data_to_send, (x.strip(), 8787))
+				b = b + 1
 			#add in wait and comfirm send, and settimeout as well if nothing recieved
-		print data_to_send
 
 def check_for_bad_symbols(request):
 	temp = request.split()
@@ -141,25 +149,28 @@ def check_for_bad_symbols(request):
 		return True
 
 def new_db_request(address): #request to syncronise with another dns server
-	client = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
-	client.connect((address, 8878))
-	client.send("ready")
-	timestamp_to_check_from = client.recv(1024)
-	print "recieve timestamp: " + str(timestamp_to_check_from)
-	to_be_synced = get_newest_entrys(ip_dns_list,timestamp_to_check_from)
-	print "list to be synced: " + str(to_be_synced)
-	if len(to_be_synced) != 0:
-		print "sending data for syncing"
-		for x in to_be_synced:
-			temp = x.split()
-			client.send(str(temp[0].strip()) + " " + str(temp[1].strip()) + " " + str(temp[2].strip()) + " " + str(temp[3].strip()))
-			go = client.recv(1024)
-		client.send("done")
-	else:
-	 	client.send("done")
-	 	print "nothing to sync"
-	print "finished"
-	client.close()
+	try:
+		client = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+		client.connect((address, 8878))
+		client.send("ready")
+		timestamp_to_check_from = client.recv(1024)
+		print "recieve timestamp: " + str(timestamp_to_check_from)
+		to_be_synced = get_newest_entrys(ip_dns_list,timestamp_to_check_from)
+		print "list to be synced: " + str(to_be_synced)
+		if len(to_be_synced) != 0:
+			print "sending data for syncing"
+			for x in to_be_synced:
+				temp = x.split()
+				client.send(str(temp[0].strip()) + " " + str(temp[1].strip()) + " " + str(temp[2].strip()) + " " + str(temp[3].strip()))
+				go = client.recv(1024)
+			client.send("done")
+		else:
+		 	client.send("done")
+		 	print "nothing to sync"
+			print "finished"
+			client.close()
+	except:
+		print "coudlnt connect"
 
 def new_dom(data):# adds a new entry in dns.db
 	get_peerstats()
