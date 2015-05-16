@@ -14,6 +14,7 @@ client:
 client can be run as normal user from anywhere
 
 Add new domain: python ddns-client.py new domain.name ipv6-addr
+
 Rlease a domain: python ddns-client.py release domain.name
 
 # How it works
