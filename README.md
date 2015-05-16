@@ -3,7 +3,24 @@ a very basic attempt at decentralised dns for cjdns
 
 Ddns piggy backs Cjdns's dht routing to find servers to share dns data with, this way we dont have to create our own dht program. 
 
-THIS IS NOT FOR USE AT THE MOMENT, STILL IN A BROKEN STATE.
+DDNS is ready for testing, This is PRE-ALPHA, so lots of broken shit
+
+# How it works
+
+Domains are stored in dns.db as follows:
+
+"example.com ipv6-addr timestamp change-counter"
+
+"io.nerd fc38:410e:bce7:a7e2:d4f0:a805:b509:be11 1431803121.12 0"
+
+request format should as follows:
+01 = add new domain
+
+01 io.nerd fc38:410e:bce7:a7e2:d4f0:a805:b509:be11
+
+02 = release domain
+
+02 io.nerd
 
 Todo list:
 ==========
