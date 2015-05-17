@@ -174,12 +174,13 @@ def new_db_request(address): #request to syncronise with another dns server
 			print "finished"
 			client.close()
 	except:
-		pass
+		print "coudlnt connect"
 
 def new_dom(data):# adds a new entry in dns.db
 	get_peerstats()
 	new_dom_array = data.split()
 	if new_dom_array[1] not in ip_dns_list:
+		print "1"
 		ip_dns_list[new_dom_array[1]] = [new_dom_array[2], new_dom_array[3], 1] #check and change
 		with open("dns.db",'w') as handler:
 			for x in ip_dns_list:
@@ -189,6 +190,7 @@ def new_dom(data):# adds a new entry in dns.db
 		udoser.sendto("New Domain Added",addr)
 
 	elif ip_dns_list[new_dom_array[1]][0] == "x":
+		print "2"
 		ip_dns_list[new_dom_array[1]] = [new_dom_array[2], new_dom_array[3], str(int(ip_dns_list[new_dom_array[1]][2]) + 1)] #check and change
 		with open("dns.db",'w') as handler:
 			for x in ip_dns_list:
@@ -233,10 +235,11 @@ while i == 0:
 		break
 	print "incoming request: " + request + " - from: " + str(addr[0])
 	#this section deals with all the requests that come in, including requests to syncronise databases
-	udoser.sendto("ok",addr)
+	#udoser.sendto("ok",addr)
 	s_request = request.split()
 	if 01 == int(s_request[0]):
 		if check_for_bad_symbols(request) != False:
+			print "here"
 			new_dom(request)
 		else:
 			udoser.sendto("Bad Symbols in Request",addr)
