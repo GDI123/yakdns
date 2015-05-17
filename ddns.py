@@ -27,7 +27,6 @@ for x in pre_ip_dns_list:
 
 def check_db_current():#this monster basicly searches and asks if anyone would like to sync with it, and it checks if everything is right with a couple of mega simple algorithms
 	recieved_dns_list = []
-	get_peerstats()
 	#start temp server
 	try:
 		s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
@@ -44,8 +43,14 @@ def check_db_current():#this monster basicly searches and asks if anyone would l
 		if bob.strip() == "ready":
 			i = 0
 			#have to add an if db empty send all your database
-			t_stamp = get_newest_timestamp(ip_dns_list)
-			conn.send(t_stamp)
+			print len(ip_dns_list)
+			if len(ip_dns_list) != 0:
+				t_stamp = get_newest_timestamp(ip_dns_list)
+			else:
+				t_stamp = 0
+			print "final t-stamp result" + str(t_stamp)
+			conn.send(str(t_stamp))
+			print "timestamp sent"
 			while i != 1:
 				r_Data = conn.recv(2048)
 				if r_Data.strip() != "done":
@@ -56,8 +61,7 @@ def check_db_current():#this monster basicly searches and asks if anyone would l
 
 				s.close()
 
-		#consider splitting this up and have the above option more generic and below
-		#a function on its own
+		if len(recieved_dns_list) != 0:
 			final_list = {}
 			for x in recieved_dns_list:
 				temp = x.split()
@@ -72,7 +76,7 @@ def check_db_current():#this monster basicly searches and asks if anyone would l
 
 			print "all done starting up ddns"
 		else:
-			print "nothing to update"
+			print "nothing to update, continuing to start ddns"
 	except:
 		print "no other dns servers found, continuing to start ddns"
 
@@ -83,6 +87,7 @@ def get_newest_timestamp(old):#search current dns list for the newest entry
 	last_timestamp = max(newest_timestamp)
 	return last_timestamp
 
+
 def get_newest_entrys(current_dict,timestamp_request):#this is used to grab only the newest dns entrys from a specified date
 	newest = []
 	for x in current_dict:
@@ -92,13 +97,11 @@ def get_newest_entrys(current_dict,timestamp_request):#this is used to grab only
 
 def sync_db_check(old,new):#compares local dns list and requested new one and updates entrys to match
 	for x in new:
-		print "new " + str(x)
 		if x not in str(old):
 			old[x] = new[x]
 		elif old[x][1] != new[x][1]: #this if statement checks and compares to see if timestamps are the same or not
 			if old[x][2] < new[x][2]: #this if statement checks to see if times update is greater than in the original dictonary if so it will update the old dictonary to match
 				old[x] = new[x] #update old dict
-	print "old " + str(old)
 	return old
 
 def get_peerstats():#find out who were connected to so we can find dns servers
@@ -149,6 +152,7 @@ def check_for_bad_symbols(request):
 		return True
 
 def new_db_request(address): #request to syncronise with another dns server
+	time.sleep(1)
 	try:
 		client = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
 		client.connect((address, 8878))
@@ -170,7 +174,7 @@ def new_db_request(address): #request to syncronise with another dns server
 			print "finished"
 			client.close()
 	except:
-		print "coudlnt connect"
+		pass
 
 def new_dom(data):# adds a new entry in dns.db
 	get_peerstats()
@@ -193,6 +197,7 @@ def new_dom(data):# adds a new entry in dns.db
 		print "new dom accepted"
 		udoser.sendto("New Domain Added",addr)
 	else:
+		print "3"
 		udoser.sendto("Domain Already Taken",addr)
 
 def release_dom(data): #simply removes an entry in the dns.dn
