@@ -1,11 +1,11 @@
-# ddns
+# YakDNS
 a very basic attempt at decentralised dns for cjdns
 
-Ddns piggy backs Cjdns's dht routing to find servers to share dns data with, this way we dont have to create our own dht program. 
+YakDNS piggy backs Cjdns's dht routing to find servers to share dns data with, this way we dont have to create our own dht program. 
 
-DDNS is ready for testing, This is PRE-ALPHA, so lots of broken shit
+YakDNS is ready for testing, This is PRE-ALPHA, so lots of broken shit
 
-# Install ddns
+# Install YakDNS
 
 simply drop ddns.py into /cjdns-master thats it and run as root just like cjdns
 
@@ -39,7 +39,7 @@ request format should be as follows, and over udp:
 
 # contact
 
-you can find me on irc at  yakamo.org #ddns
+you can find me on irc at  yakamo.org #yakdns
 
 Todo list:
 ==========
